@@ -326,7 +326,7 @@ def checkWin():
                     buttons[x][y]['state'] = 'disabled'
                     buttons[_x][_y].config(image = mine, text = "*")
         restartLabel.set(restartWon)
-        tkinter.messagebox.showinfo("Game Over", "You have won!")
+        tkinter.messagebox.showinfo("Game Over", "You have won")
 
 #loading configuration file for game 
 if os.path.exists("config.ini"):
