@@ -8,6 +8,12 @@ window.resizable(0, 0)
 window.title("Minesweeper")
 
 #prepare default values
+gameover = False
+
+restartDefault = "◕‿◕"
+restartLost = "◕︿◕" 
+restartLabel = tkinter.StringVar()
+restartLabel.set(restartDefault)
 
 rows = 10
 cols = 10
@@ -22,24 +28,22 @@ field = []
 buttons = []
 
 colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
-plain = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_clicked.gif")
+plain = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_plain.gif")
 mine = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_mine.gif")
 flag = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_flag.gif")
-tile_no = []
-for x in range(1, 9):
-    tile_no.append(tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_"+str(x)+".gif"))
+tile_no = [" ", "❶", "❷", "❸", "❹", "❺", "❻", "❼", "❽"]
+colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
 
-gameover = False
 customsizes = []
 
 def timer():
-    global time, count, timeVar, firstClick
-    while firstClick == False:
+    global count, firstClick, gameover
+    while firstClick == False and gameover == False:
         count = count + 1
         time.set(count)
         sleep(1)
         timer()
-    timeVar.cancel()
+    restartLabel.set(restartDefault if gameover == False else restartLost)
 
 
 timeVar = threading.Timer(1.0, timer)
@@ -152,8 +156,8 @@ def prepareGame():
 
 def prepareWindow():
     global rows, cols, buttons, time
-    tkinter.Button(window, text="Restart", width = 2, command=restartGame).grid(row=0, column=0, columnspan=cols-3, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-    tkinter.Label(window, textvariable=time).grid(row = 0, column = cols-3, columnspan=3, sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W )
+    tkinter.Button(window, textvariable=restartLabel, width = 2, command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+    tkinter.Label(window, textvariable=time, ).grid(row = 0, column = cols - (int(cols/2)), columnspan=int(cols/3), sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W )
     buttons = []
     for x in range(0, rows):
         buttons.append([])
@@ -170,16 +174,18 @@ def restartGame():
     firstClick = True
     count = 0
     time.set(count)
-    sleep(3)
+    restartLabel.set(restartDefault)
+    sleep(0.5)
     
     #destroy all - prevent memory leak
     for x in window.winfo_children():
         if type(x) != tkinter.Menu:
             x.destroy()
+    timeVar = threading.Timer(1.0, timer)
     prepareWindow()
 
 def clickOn(x,y):
-    global field, buttons, colors, gameover, rows, cols, tile_no, plain, time, firstClick, timeVar
+    global field, buttons, colors, gameover, rows, cols, tile_no, time, firstClick, timeVar, colors
     if firstClick:
         prepareGame()
         firstClick = False
@@ -190,7 +196,7 @@ def clickOn(x,y):
     if field[x][y] == -1:
         buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
         buttons[x][y].config(image = mine, text = "*")
-        buttons[x][y].config(background='red', disabledforeground='black')
+        buttons[x][y].config(background='red')
         gameover = True
         tkinter.messagebox.showinfo("Game Over", "You have lost.")
         #now show all other mines
@@ -198,14 +204,11 @@ def clickOn(x,y):
             for _y in range(cols):
                 if field[_x][_y] == -1:
                     buttons[x][y]['state'] = 'disabled'
-                    buttons[_x][_y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
                     buttons[_x][_y].config(image = mine, text = "*")
     else:
-        buttons[x][y].config(image = tile_no[(field[x][y] - 1)] if field[x][y] > 0 else plain)
-        buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+        buttons[x][y].config(disabledforeground= colors[field[x][y]], text = tile_no[field[x][y]])
     if field[x][y] == 0:
-        buttons[x][y].config(image = plain, text = " ")
-        buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+        buttons[x][y].config(text = " ")
         #now repeat for all buttons nearby which are 0... kek
         autoClickOn(x,y)
     buttons[x][y]['state'] = 'disabled'
@@ -213,16 +216,14 @@ def clickOn(x,y):
     checkWin()
 
 def autoClickOn(x,y):
-    global field, buttons, colors, rows, cols, tile_no, plain
+    global field, buttons, colors, rows, cols, tile_no
     if buttons[x][y]["state"] == "disabled":
         return
     if field[x][y] != 0:
         buttons[x][y].config(text = str(field[x][y]))
     else:
-        buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-        buttons[x][y].config(image = plain, text = " ")
-    buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-    buttons[x][y].config(image = tile_no[(field[x][y] - 1)] if field[x][y] > 0 else plain)
+        buttons[x][y].config(text = " ")
+    buttons[x][y].config(disabledforeground= colors[field[x][y]], text = tile_no[field[x][y]])
     buttons[x][y].config(relief=tkinter.SUNKEN)
     buttons[x][y]['state'] = 'disabled'
     if field[x][y] == 0:
@@ -248,16 +249,16 @@ def onRightClick(x,y):
     if gameover:
         return
     if buttons[x][y]["text"] == "?":
-        buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-        buttons[x][y].config(image= plain, text = " ")
+        buttons[x][y].config(image = '', text = " ")
         buttons[x][y]["state"] = "normal"
     elif buttons[x][y]["text"] == " " and buttons[x][y]["state"] == "normal":
-        buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-        buttons[x][y].config(image = flag, text = "?")
+        for i in range(0, 2): 
+            buttons[x][y].config(image = flag, text = "?")
+            buttons.image = flag
         buttons[x][y]["state"] = "disabled"
 
 def checkWin():
-    global buttons, field, rows, cols, gameover, timeVar, time
+    global buttons, field, rows, cols, gameover, timeVar, time, firstClick
     win = True
     for x in range(0, rows):
         for y in range(0, cols):
@@ -266,12 +267,11 @@ def checkWin():
     if win:
         tkinter.messagebox.showinfo("Gave Over", "You have won.")
         gameover = True
-        timeVar.cancel()
+        firstClick = True
         for _x in range(0, rows):
             for _y in range(cols):
                 if field[_x][_y] == -1:
                     buttons[x][y]['state'] = 'disabled'
-                    buttons[_x][_y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
                     buttons[_x][_y].config(image = mine, text = "*")
 
 
