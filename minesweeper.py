@@ -10,31 +10,36 @@ window.title("Minesweeper")
 #prepare default values
 gameover = False
 
-restartDefault = "◕‿◕"
-restartLost = "◕︿◕" 
+#Restart label values
+restartDefault = "༼◔‿◔༽" #displayed when game first starts
+restartLost = "༼◕︿◕༽"    #displayed when player loses
+restartWon = "ヽ༼◔｡◔༽ﾉ"   #displayed when player wins game
 restartLabel = tkinter.StringVar()
 restartLabel.set(restartDefault)
 
-rows = 10
-cols = 10
-mines = 10
-
+#Timer values
 count = 0
 time = tkinter.StringVar()
 time.set(count)
 firstClick = True
 
-field = []
-buttons = []
+#Declaring game board values and initialising to default "beginner" level
+rows = 10
+cols = 10
+mines = 10
 
+#board refers to the whole area which will contain rowsxcols number of buttons 
+board = []
+buttons = []
+customsizes = []
+
+#Graphics to fill into the cells
 colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
-plain = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_plain.gif")
 mine = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_mine.gif")
 flag = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_flag.gif")
 tile_no = [" ", "❶", "❷", "❸", "❹", "❺", "❻", "❼", "❽"]
-colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
 
-customsizes = []
+
 
 def timer():
     global count, firstClick, gameover
@@ -113,46 +118,46 @@ def loadConfig():
         customsizes.append((config.getint("sizes", "row"+str(x)), config.getint("sizes", "cols"+str(x)), config.getint("sizes", "mines"+str(x))))
 
 def prepareGame():
-    global rows, cols, mines, field
-    field = []
+    global rows, cols, mines, board
+    board = []
     for x in range(0, rows):
-        field.append([])
+        board.append([])
         for y in range(0, cols):
             #add button and init value for game
-            field[x].append(0)
+            board[x].append(0)
     #generate mines
     for _ in range(0, mines):
         x = random.randint(0, rows-1)
         y = random.randint(0, cols-1)
         #prevent spawning mine on top of each other
-        while field[x][y] == -1:
+        while board[x][y] == -1:
             x = random.randint(0, rows-1)
             y = random.randint(0, cols-1)
-        field[x][y] = -1
+        board[x][y] = -1
         if x != 0:
             if y != 0:
-                if field[x-1][y-1] != -1:
-                    field[x-1][y-1] = int(field[x-1][y-1]) + 1
-            if field[x-1][y] != -1:
-                field[x-1][y] = int(field[x-1][y]) + 1
+                if board[x-1][y-1] != -1:
+                    board[x-1][y-1] = int(board[x-1][y-1]) + 1
+            if board[x-1][y] != -1:
+                board[x-1][y] = int(board[x-1][y]) + 1
             if y != cols-1:
-                if field[x-1][y+1] != -1:
-                    field[x-1][y+1] = int(field[x-1][y+1]) + 1
+                if board[x-1][y+1] != -1:
+                    board[x-1][y+1] = int(board[x-1][y+1]) + 1
         if y != 0:
-            if field[x][y-1] != -1:
-                field[x][y-1] = int(field[x][y-1]) + 1
+            if board[x][y-1] != -1:
+                board[x][y-1] = int(board[x][y-1]) + 1
         if y != cols-1:
-            if field[x][y+1] != -1:
-                field[x][y+1] = int(field[x][y+1]) + 1
+            if board[x][y+1] != -1:
+                board[x][y+1] = int(board[x][y+1]) + 1
         if x != rows-1:
             if y != 0:
-                if field[x+1][y-1] != -1:
-                    field[x+1][y-1] = int(field[x+1][y-1]) + 1
-            if field[x+1][y] != -1:
-                field[x+1][y] = int(field[x+1][y]) + 1
+                if board[x+1][y-1] != -1:
+                    board[x+1][y-1] = int(board[x+1][y-1]) + 1
+            if board[x+1][y] != -1:
+                board[x+1][y] = int(board[x+1][y]) + 1
             if y != cols-1:
-                if field[x+1][y+1] != -1:
-                    field[x+1][y+1] = int(field[x+1][y+1]) + 1
+                if board[x+1][y+1] != -1:
+                    board[x+1][y+1] = int(board[x+1][y+1]) + 1
 
 def prepareWindow():
     global rows, cols, buttons, time
@@ -185,29 +190,29 @@ def restartGame():
     prepareWindow()
 
 def clickOn(x,y):
-    global field, buttons, colors, gameover, rows, cols, tile_no, time, firstClick, timeVar, colors
+    global board, buttons, colors, gameover, rows, cols, tile_no, time, firstClick, timeVar, colors
     if firstClick:
         prepareGame()
         firstClick = False
         timeVar.start()
     if gameover:
         return
-    buttons[x][y].config(text = str(field[x][y]))
-    if field[x][y] == -1:
+    buttons[x][y].config(text = str(board[x][y]))
+    if board[x][y] == -1:
         buttons[x][y].grid(sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
         buttons[x][y].config(image = mine, text = "*")
         buttons[x][y].config(background='red')
         gameover = True
-        tkinter.messagebox.showinfo("Game Over", "You have lost.")
         #now show all other mines
         for _x in range(0, rows):
             for _y in range(cols):
-                if field[_x][_y] == -1:
+                if board[_x][_y] == -1:
                     buttons[x][y]['state'] = 'disabled'
                     buttons[_x][_y].config(image = mine, text = "*")
+        tkinter.messagebox.showinfo("Game Over", "You have lost.")
     else:
-        buttons[x][y].config(disabledforeground= colors[field[x][y]], text = tile_no[field[x][y]])
-    if field[x][y] == 0:
+        buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]])
+    if board[x][y] == 0:
         buttons[x][y].config(text = " ")
         #now repeat for all buttons nearby which are 0... kek
         autoClickOn(x,y)
@@ -216,17 +221,17 @@ def clickOn(x,y):
     checkWin()
 
 def autoClickOn(x,y):
-    global field, buttons, colors, rows, cols, tile_no
+    global board, buttons, colors, rows, cols, tile_no
     if buttons[x][y]["state"] == "disabled":
         return
-    if field[x][y] != 0:
-        buttons[x][y].config(text = str(field[x][y]))
+    if board[x][y] != 0:
+        buttons[x][y].config(text = str(board[x][y]))
     else:
         buttons[x][y].config(text = " ")
-    buttons[x][y].config(disabledforeground= colors[field[x][y]], text = tile_no[field[x][y]])
+    buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]])
     buttons[x][y].config(relief=tkinter.SUNKEN)
     buttons[x][y]['state'] = 'disabled'
-    if field[x][y] == 0:
+    if board[x][y] == 0:
         if x != 0 and y != 0:
             autoClickOn(x-1,y-1)
         if x != 0:
@@ -245,7 +250,7 @@ def autoClickOn(x,y):
             autoClickOn(x+1,y+1)
 
 def onRightClick(x,y):
-    global buttons, plain, flag
+    global buttons, flag
     if gameover:
         return
     if buttons[x][y]["text"] == "?":
@@ -258,22 +263,22 @@ def onRightClick(x,y):
         buttons[x][y]["state"] = "disabled"
 
 def checkWin():
-    global buttons, field, rows, cols, gameover, timeVar, time, firstClick
+    global buttons, board, rows, cols, gameover, timeVar, time, firstClick
     win = True
     for x in range(0, rows):
         for y in range(0, cols):
-            if field[x][y] != -1 and buttons[x][y]["state"] == "normal":
+            if board[x][y] != -1 and buttons[x][y]["state"] == "normal":
                 win = False
     if win:
-        tkinter.messagebox.showinfo("Gave Over", "You have won.")
-        gameover = True
         firstClick = True
+        restartLabel.set(restartWon)
+        gameover = True
         for _x in range(0, rows):
             for _y in range(cols):
-                if field[_x][_y] == -1:
+                if board[_x][_y] == -1:
                     buttons[x][y]['state'] = 'disabled'
                     buttons[_x][_y].config(image = mine, text = "*")
-
+        tkinter.messagebox.showinfo("Gave Over", "You have won.")
 
 if os.path.exists("config.ini"):
     loadConfig()
