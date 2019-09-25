@@ -102,7 +102,7 @@ def setSize(r,c,m):
 def saveConfig():
     global rows, cols, mines
     #configuration
-    config = configparser.SafeConfigParser()
+    config = configparser.ConfigParser()
     config.add_section("game")
     config.set("game", "rows", str(rows))
     config.set("game", "cols", str(cols))
@@ -122,7 +122,7 @@ def saveConfig():
 #as well as any previous board customisations
 def loadConfig():
     global rows, cols, mines, customsizes
-    config = configparser.SafeConfigParser()
+    config = configparser.ConfigParser()
     config.read("config.ini")
     rows = config.getint("game", "rows")
     cols = config.getint("game", "cols")
@@ -305,8 +305,8 @@ def onRightClick(x,y):
     elif buttons[x][y]["text"] == " " and buttons[x][y]["state"] == "normal":
         #buttons[x][y]["state"] = "disabled"
         for i in range(0, 2):
+            buttons[x][y]["state"] = "disabled"
             buttons[x][y].config(image = flag, text = "?")
-            buttons.image = flag
         
         
 #function checkWin is called everytime a cell is clicked on to check if win conditions have been met
