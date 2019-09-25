@@ -1,5 +1,5 @@
 #import statements
-import tkinter, configparser, tkinter.messagebox, tkinter.simpledialog, 
+import tkinter, configparser, tkinter.messagebox, tkinter.simpledialog 
 import random, os, threading
 from time import sleep
 
@@ -227,7 +227,6 @@ def clickOn(x,y):
     buttons[x][y].config(text = str(board[x][y]))
     #checks if clicked cell is a mine
     if board[x][y] == -1:
-        buttons[x][y].config(image = '')
         #displays mine if it is one
         buttons[x][y].config(image = mine, text = "*", background='red')
         #sets Lose condition
@@ -236,9 +235,13 @@ def clickOn(x,y):
         for _x in range(0, rows):
             for _y in range(cols):
                 if board[_x][_y] == -1:
-                    buttons[x][y]['state'] = 'disabled'
-                    buttons[_x][_y].config(image = '')
-                    buttons[_x][_y].config(image = mine, text = "*")
+                    if buttons[_x][_y]["text"] == "?":
+                        buttons[_x][_y].config(background = 'green')
+                    elif buttons[_x][_y]["text"] != "?":
+                        buttons[_x][_y].config(image = mine, text = "*")
+                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == "?":
+                    buttons[_x][_y].config(background = 'red')
+                buttons[x][y]['state'] = 'disabled'
         restartLabel.set(restartLost) #changes Restart button to lost emoticon and displays game ove
         tkinter.messagebox.showinfo("Game Over", "You have lost.")
     else: #displays any and all surrounding numbers if not a mine
@@ -323,8 +326,13 @@ def checkWin():
         for _x in range(0, rows):
             for _y in range(cols):
                 if board[_x][_y] == -1:
-                    buttons[x][y]['state'] = 'disabled'
-                    buttons[_x][_y].config(image = mine, text = "*")
+                    if buttons[_x][_y]["text"] == "?":
+                        buttons[_x][_y].config(background = 'green')
+                    elif buttons[_x][_y]["text"] != "?":
+                        buttons[_x][_y].config(image = mine, text = "*")
+                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == "?":
+                    buttons[_x][_y].config(background = 'red')
+                buttons[x][y]['state'] = 'disabled'
         restartLabel.set(restartWon)
         tkinter.messagebox.showinfo("Game Over", "You have won")
 
