@@ -80,7 +80,7 @@ def setCustomSize():
     c = tkinter.simpledialog.askinteger("Custom size", "Enter amount of columns")
     m = tkinter.simpledialog.askinteger("Custom size", "Enter amount of mines")
     #number of mines need to be proportionate to board dimensions
-    while m > r*c:
+    while m > r*c -1:
         m = tkinter.simpledialog.askinteger("Custom size", "Maximum mines for this dimension is: " + str(r*c) + "\nEnter amount of mines")
     customsizes.insert(0, (r,c,m))
     customsizes = customsizes[0:5]
@@ -132,8 +132,24 @@ def loadConfig():
         customsizes.append((config.getint("sizes", "row"+str(x)), config.getint("sizes", "cols"+str(x)), config.getint("sizes", "mines"+str(x))))
 
 
+#setup for board display
+def prepareWindow():
+    global rows, cols, buttons, time
+    restartButton = tkinter.Button(window, textvariable=restartLabel, width = 2, command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+    timerLabel= tkinter.Label(window, textvariable=time, font=("Times", 10, "bold"))
+    timerLabel.grid(row = 0, column = cols - (int(cols/2)), columnspan=int(cols/2), sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W)
+    buttons = []
+    for x in range(0, rows):
+        buttons.append([])
+        for y in range(0, cols):
+            b = tkinter.Button(window, text=" ", width = 2, height = 1, command=lambda x=x,y=y: clickOn(x,y))
+            b.bind("<Button-3>", lambda e, x=x, y=y:onRightClick(x, y))
+            b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+            buttons[x].append(b)
+
+
 #spawns mines and makes sure that mines don't spawn on top of each other
-def prepareGame():
+def prepareGame(cx, cy):
     global rows, cols, mines, board
     board = []
     for x in range(0, rows):
@@ -146,7 +162,7 @@ def prepareGame():
         x = random.randint(0, rows-1)
         y = random.randint(0, cols-1)
         #prevent spawning mine on top of each other
-        while board[x][y] == -1:
+        while board[x][y] == -1 or (x == cx and y == cy):
             x = random.randint(0, rows-1)
             y = random.randint(0, cols-1)
         board[x][y] = -1
@@ -176,22 +192,6 @@ def prepareGame():
                     board[x+1][y+1] = int(board[x+1][y+1]) + 1
 
 
-#setup for board display
-def prepareWindow():
-    global rows, cols, buttons, time
-    restartButton = tkinter.Button(window, textvariable=restartLabel, width = 2, command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-    timerLabel= tkinter.Label(window, textvariable=time, font=("Times", 10, "bold"))
-    timerLabel.grid(row = 0, column = cols - (int(cols/2)), columnspan=int(cols/2), sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W)
-    buttons = []
-    for x in range(0, rows):
-        buttons.append([])
-        for y in range(0, cols):
-            b = tkinter.Button(window, text=" ", width = 2, height = 1, command=lambda x=x,y=y: clickOn(x,y))
-            b.bind("<Button-3>", lambda e, x=x, y=y:onRightClick(x, y))
-            b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-            buttons[x].append(b)
-
-
 #when the restart button is clicked, resets vital game values
 def restartGame():
     global gameover, firstClick, count, timeVar, time
@@ -217,7 +217,7 @@ def clickOn(x,y):
     #checks if this is the first click of the game to 
     if firstClick:
         #randomly assign mines on the board after first click
-        prepareGame()
+        prepareGame(x, y)
         #toggle value so this only happens once per game
         firstClick = False
         #AND start the game timer
@@ -228,7 +228,7 @@ def clickOn(x,y):
     #checks if clicked cell is a mine
     if board[x][y] == -1:
         #displays mine if it is one
-        buttons[x][y].config(image = mine, text = "*", background='red')
+        buttons[x][y].config(image = mine, text = "*", background='black')
         #sets Lose condition
         gameover = True
         #now show all other mines
@@ -321,7 +321,7 @@ def checkWin():
                 win = False
     if win:
         #if all non-mine cells have been revealed, starts gameover process and reveals all mines
-        firstClick = True
+        firstClick = True # to stop game timer
         gameover = True
         for _x in range(0, rows):
             for _y in range(cols):
