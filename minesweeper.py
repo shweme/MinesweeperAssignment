@@ -2,12 +2,13 @@
 import tkinter, configparser, tkinter.messagebox, tkinter.simpledialog 
 import random, os, threading
 from time import sleep
-
+from PIL import Image, ImageTk
 
 #creating game window and setting title and icon
 window = tkinter.Tk()
 window.title("Minesweeper")
-window.iconbitmap("MinesweeperAssignment/images/Flag.ico")
+window.iconbitmap("MinesweeperAssignment-master/images/Flag.ico")
+window.resizable(0,0)
 
 #prepare default values
 gameover = False
@@ -37,8 +38,11 @@ customsizes = [] #array that stores all board customisations made for future use
 
 #Graphics to fill into the cells
 colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
-mine = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_mine.gif")
-flag = tkinter.PhotoImage(file = "MinesweeperAssignment/images/tile_flag.png")
+#mine = tkinter.PhotoImage(file = "MinesweeperAssignment-master/images/tile_mine.gif")
+#image = Image.open("MinesweeperAssignment-master/images/tile_flag.png")
+mine = "☀"
+flag = "⚑"
+
 tile_no = [" ", "❶", "❷", "❸", "❹", "❺", "❻", "❼", "❽"]
 
 
@@ -60,13 +64,13 @@ def createMenu():
     menubar = tkinter.Menu(window)
     # settings to change board size, and
     menusize = tkinter.Menu(window, tearoff=0)
-    menusize.add_command(label="Beginner (10x10 with 10 mines)", command=lambda: setSize(10, 10, 10))
-    menusize.add_command(label="Intermediate (20x20 with 40 mines)", command=lambda: setSize(20, 20, 40))
-    menusize.add_command(label="Expert (35x35 with 120 mines)", command=lambda: setSize(35, 35, 120))
+    menusize.add_command(label="Beginner", command=lambda: setSize(10, 10, 10))
+    menusize.add_command(label="Intermediate", command=lambda: setSize(20, 20, 40))
+    menusize.add_command(label="Expert", command=lambda: setSize(35, 35, 120))
     menusize.add_command(label="custom", command=setCustomSize)
     menusize.add_separator()
     for x in range(0, len(customsizes)):
-        menusize.add_command(label=str(customsizes[x][0])+"x"+str(customsizes[x][1])+" with "+str(customsizes[x][2])+" mines", command=lambda customsizes=customsizes: setSize(customsizes[x][0], customsizes[x][1], customsizes[x][2]))
+        menusize.add_command(label=str(customsizes[x][0])+"x"+str(customsizes[x][1]), command=lambda customsizes=customsizes: setSize(customsizes[x][0], customsizes[x][1], customsizes[x][2]))
     menubar.add_cascade(label="size", menu=menusize)
     # a close window option
     menubar.add_command(label="exit", command=lambda: window.destroy())
@@ -135,14 +139,14 @@ def loadConfig():
 #setup for board display
 def prepareWindow():
     global rows, cols, buttons, time
-    restartButton = tkinter.Button(window, textvariable=restartLabel, width = 2, command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+    restartButton = tkinter.Button(window, textvariable=restartLabel, width = 2, font=("Times", 10, "bold"), command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
     timerLabel= tkinter.Label(window, textvariable=time, font=("Times", 10, "bold"))
     timerLabel.grid(row = 0, column = cols - (int(cols/2)), columnspan=int(cols/2), sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W)
     buttons = []
     for x in range(0, rows):
         buttons.append([])
         for y in range(0, cols):
-            b = tkinter.Button(window, text=" ", width = 2, height = 1, command=lambda x=x,y=y: clickOn(x,y))
+            b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Times", 10, "bold"), command=lambda x=x,y=y: clickOn(x,y))
             b.bind("<Button-3>", lambda e, x=x, y=y:onRightClick(x, y))
             b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
             buttons[x].append(b)
@@ -228,26 +232,26 @@ def clickOn(x,y):
     #checks if clicked cell is a mine
     if board[x][y] == -1:
         #displays mine if it is one
-        buttons[x][y].config(image = mine, text = "*", background='black')
+        buttons[x][y].config(text = mine, background='black', disabledforeground = "white")
         #sets Lose condition
         gameover = True
         #now show all other mines
         for _x in range(0, rows):
             for _y in range(cols):
                 if board[_x][_y] == -1:
-                    if buttons[_x][_y]["text"] == "?":
-                        buttons[_x][_y].config(background = 'green')
-                    elif buttons[_x][_y]["text"] != "?":
-                        buttons[_x][_y].config(image = mine, text = "*")
-                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == "?":
-                    buttons[_x][_y].config(background = 'red')
+                    if buttons[_x][_y]["text"] == flag:
+                        buttons[_x][_y].config(background = 'lime green', disabledforeground = "black")
+                    elif buttons[_x][_y]["text"] != flag:
+                        buttons[_x][_y].config(text = mine)
+                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
+                    buttons[_x][_y].config(background = 'red', disabledforeground = "black")
                 buttons[x][y]['state'] = 'disabled'
         restartLabel.set(restartLost) #changes Restart button to lost emoticon and displays game ove
         tkinter.messagebox.showinfo("Game Over", "You have lost.")
     else: #displays any and all surrounding numbers if not a mine
-        buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]])
+        buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]], background = "#C0C0C0")
     if board[x][y] == 0: #displays "pocket" which has no mine around
-        buttons[x][y].config(text = " ")
+        buttons[x][y].config(text = " ", background = "#C0C0C0")
         #repeats for all surrounding cells to reveal empty pockets, if any exist
         autoClickOn(x,y)
     buttons[x][y]['state'] = 'disabled' #after a button has been clicked on, it cannot be clicked again
@@ -266,7 +270,7 @@ def autoClickOn(x,y):
         buttons[x][y].config(text = " ")
     #display valid surrounding numbers and disable these buttons
     buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]])
-    buttons[x][y].config(relief=tkinter.SUNKEN)
+    buttons[x][y].config(relief=tkinter.SUNKEN, background = "#C0C0C0")
     buttons[x][y]['state'] = 'disabled'
     #repeats the same for the 8 cells surrounding button[x][y] if current cell is a "pocket"
     #   N.W.      N        N.E.  #
@@ -298,20 +302,20 @@ def onRightClick(x,y):
     if gameover:
         return
     #If button is a flag, "unflags" that cell
-    if buttons[x][y]["text"] == "?":
-        buttons[x][y].config(image = '', text = " ")
+    if buttons[x][y]["text"] == flag:
+        buttons[x][y].config(text = " ")
         buttons[x][y]["state"] = "normal"
     #else, flags the cell if cell is unflagged
     elif buttons[x][y]["text"] == " " and buttons[x][y]["state"] == "normal":
         #buttons[x][y]["state"] = "disabled"
         for i in range(0, 2):
             buttons[x][y]["state"] = "disabled"
-            buttons[x][y].config(image = flag, text = "?")
+            buttons[x][y].config(text = flag, disabledforeground = "black")
         
         
 #function checkWin is called everytime a cell is clicked on to check if win conditions have been met
 def checkWin():
-    global buttons, board, rows, cols, gameover, timeVar, time, firstClick, restartWon
+    global buttons, board, rows, cols, gameover, firstClick, restartWon
     win = True
     for x in range(0, rows):
         for y in range(0, cols):
@@ -326,13 +330,14 @@ def checkWin():
         for _x in range(0, rows):
             for _y in range(cols):
                 if board[_x][_y] == -1:
-                    if buttons[_x][_y]["text"] == "?":
-                        buttons[_x][_y].config(background = 'green')
-                    elif buttons[_x][_y]["text"] != "?":
-                        buttons[_x][_y].config(image = mine, text = "*")
-                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == "?":
-                    buttons[_x][_y].config(background = 'red')
-                buttons[x][y]['state'] = 'disabled'
+                 
+                    if buttons[_x][_y]["text"] == flag:
+                        buttons[_x][_y].config(bg = 'lime green', disabledforeground = "black")
+                    elif buttons[_x][_y]["text"] != flag:
+                        buttons[_x][_y].config(text = mine)
+                elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
+                    buttons[_x][_y].config(bg = 'red', disabledforeground = "black")
+                buttons[x][y]['state'] = 'disabled'  
         restartLabel.set(restartWon)
         tkinter.messagebox.showinfo("Game Over", "You have won")
 
