@@ -8,7 +8,7 @@ import sys
 #creating game window and setting title and icon
 window = tkinter.Tk()
 window.title("Minesweeper")
-window.iconbitmap("MinesweeperAssignment-master/images/Flag.ico")
+window.iconbitmap("MinesweeperAssignment/images/Flag.ico")
 window.resizable(0,0)
 
 #prepare default values
@@ -149,7 +149,7 @@ def prepareWindow():
     for x in range(0, rows):
         buttons.append([])
         for y in range(0, cols):
-            b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Times", 10, "bold"), command=lambda x=x,y=y: clickOn(x,y))
+            b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Times", 10, "bold"), anchor = "center", command=lambda x=x,y=y: clickOn(x,y))
             b.bind(RightClick, lambda e, x=x, y=y:onRightClick(x, y))
             b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
             buttons[x].append(b)
@@ -197,6 +197,7 @@ def prepareGame(cx, cy):
             if y != cols-1:                                                                                                                                                                                        
                 if board[x+1][y+1] != -1:
                     board[x+1][y+1] = int(board[x+1][y+1]) + 1
+
 
 def buttonConfig(button, **kwargs):
     print(kwargs)
@@ -251,11 +252,11 @@ def clickOn(x,y):
             for _y in range(cols):
                 if board[_x][_y] == -1:
                     if buttons[_x][_y]["text"] == flag:
-                        buttonConfig(buttons[x][y], text = flag, disabledforeground = "black", background = 'lime green')
+                        buttonConfig(buttons[_x][_y], text = flag, disabledforeground = "black", background = 'lime green')
                     elif buttons[_x][_y]["text"] != flag:
-                        buttonConfig(buttons[x][y], text = mine)
+                        buttonConfig(buttons[_x][_y], text = mine)
                 elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
-                    buttonConfig(buttons[x][y], disabledforeground = "black", background = 'red')
+                    buttonConfig(buttons[_x][_y], disabledforeground = "black", background = 'red')
                 buttons[x][y]['state'] = 'disabled'
         restartLabel.set(restartLost) #changes Restart button to lost emoticon and displays game ove
         tkinter.messagebox.showinfo("Game Over", "You have lost.")
@@ -335,14 +336,14 @@ def checkWin():
         gameover = True
         for _x in range(0, rows):
             for _y in range(cols):
-                buttonConfig(buttons[x][y], state = "disabled")
                 if board[_x][_y] == -1:
                     if buttons[_x][_y]["text"] == flag:
-                        buttonConfig(buttons[x][y], disabledforeground = "black", background = "lime green")
+                        buttonConfig(buttons[_x][_y], disabledforeground = "black", background = "lime green")
                     elif buttons[_x][_y]["text"] != flag:
-                        buttonConfig(buttons[x][y], text = mine)
+                        buttonConfig(buttons[_x][_y], text = mine)
                 elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
-                    buttonConfig(buttons[x][y], disabledforeground = "black", background = "red")
+                    buttonConfig(buttons[_x][_y], disabledforeground = "black", background = "red")
+                buttonConfig(buttons[_x][_y], state = "disabled")        
         restartLabel.set(restartWon)
         tkinter.messagebox.showinfo("Game Over", "You have won")
 
