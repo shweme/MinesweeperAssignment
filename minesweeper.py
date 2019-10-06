@@ -8,7 +8,7 @@ import sys
 #creating game window and setting title and icon
 window = tkinter.Tk()
 window.title("Minesweeper")
-window.iconbitmap("MinesweeperAssignment/images/Flag.ico")
+window.iconbitmap("Flag.ico")
 window.resizable(0,0)
 
 #prepare default values
@@ -200,7 +200,6 @@ def prepareGame(cx, cy):
 
 
 def buttonConfig(button, **kwargs):
-    print(kwargs)
     if 'background' in kwargs and sys.platform == 'darwin':
         button.config(highlightbackground = kwargs['background'])
         del kwargs['background']
@@ -243,7 +242,6 @@ def clickOn(x,y):
     #checks if clicked cell is a mine
     if board[x][y] == -1:
         #displays mine if it is one
-        print("we here", x, y)
         buttonConfig(buttons[x][y], text = mine, disabledforeground = "white", background = 'black')
         #sets Lose condition
         gameover = True
