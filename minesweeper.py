@@ -2,7 +2,8 @@
 import tkinter, configparser, tkinter.messagebox, tkinter.simpledialog 
 import random, os, threading
 from time import sleep
-from PIL import Image, ImageTk
+import sys
+#from PIL import Image, ImageTk
 
 #creating game window and setting title and icon
 window = tkinter.Tk()
@@ -35,6 +36,8 @@ mines = 10
 board = []
 buttons = []
 customsizes = [] #array that stores all board customisations made for future use
+RightClick = ""
+OS = ""
 
 #Graphics to fill into the cells
 colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#008284', '#840084', '#000000']
@@ -147,7 +150,7 @@ def prepareWindow():
         buttons.append([])
         for y in range(0, cols):
             b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Times", 10, "bold"), command=lambda x=x,y=y: clickOn(x,y))
-            b.bind("<Button-3>", lambda e, x=x, y=y:onRightClick(x, y))
+            b.bind(RightClick, lambda e, x=x, y=y:onRightClick(x, y))
             b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
             buttons[x].append(b)
 
@@ -195,6 +198,13 @@ def prepareGame(cx, cy):
                 if board[x+1][y+1] != -1:
                     board[x+1][y+1] = int(board[x+1][y+1]) + 1
 
+def buttonConfig(button, **kwargs):
+    print(kwargs)
+    if 'background' in kwargs and sys.platform == 'darwin':
+        button.config(highlightbackground = kwargs['background'])
+        del kwargs['background']
+    button.config(**kwargs)
+    
 
 #when the restart button is clicked, resets vital game values
 def restartGame():
@@ -232,7 +242,8 @@ def clickOn(x,y):
     #checks if clicked cell is a mine
     if board[x][y] == -1:
         #displays mine if it is one
-        buttons[x][y].config(text = mine, background='black', disabledforeground = "white")
+        print("we here", x, y)
+        buttonConfig(buttons[x][y], text = mine, disabledforeground = "white", background = 'black')
         #sets Lose condition
         gameover = True
         #now show all other mines
@@ -240,22 +251,21 @@ def clickOn(x,y):
             for _y in range(cols):
                 if board[_x][_y] == -1:
                     if buttons[_x][_y]["text"] == flag:
-                        buttons[_x][_y].config(background = 'lime green', disabledforeground = "black")
+                        buttonConfig(buttons[x][y], text = flag, disabledforeground = "black", background = 'lime green')
                     elif buttons[_x][_y]["text"] != flag:
-                        buttons[_x][_y].config(text = mine)
+                        buttonConfig(buttons[x][y], text = mine)
                 elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
-                    buttons[_x][_y].config(background = 'red', disabledforeground = "black")
+                    buttonConfig(buttons[x][y], disabledforeground = "black", background = 'red')
                 buttons[x][y]['state'] = 'disabled'
         restartLabel.set(restartLost) #changes Restart button to lost emoticon and displays game ove
         tkinter.messagebox.showinfo("Game Over", "You have lost.")
     else: #displays any and all surrounding numbers if not a mine
-        buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]], background = "#C0C0C0")
+        buttonConfig(buttons[x][y], text = tile_no[board[x][y]], disabledforeground = colors[board[x][y]], background = "#C0C0C0")
     if board[x][y] == 0: #displays "pocket" which has no mine around
-        buttons[x][y].config(text = " ", background = "#C0C0C0")
+        buttonConfig(buttons[x][y], text = " ", background = '#C0C0C0')
         #repeats for all surrounding cells to reveal empty pockets, if any exist
         autoClickOn(x,y)
-    buttons[x][y]['state'] = 'disabled' #after a button has been clicked on, it cannot be clicked again
-    buttons[x][y].config(relief=tkinter.SUNKEN)
+    buttonConfig(buttons[x][y], state = "disabled", relief = tkinter.SUNKEN) #after a button has been clicked on, it cannot be clicked again
     checkWin()#checks if player has won after every cell click
 
 
@@ -265,13 +275,11 @@ def autoClickOn(x,y):
     if buttons[x][y]["state"] == "disabled":
         return #if button has already been clicked or flagged, do nothing to it
     if board[x][y] != 0: #gets board values
-        buttons[x][y].config(text = str(board[x][y]))
+        buttonConfig(buttons[x][y], text = str(board[x][y]))
     else:#sets "pockets" to display nothing
-        buttons[x][y].config(text = " ")
+        buttonConfig(buttons[x][y], text = " ")
     #display valid surrounding numbers and disable these buttons
-    buttons[x][y].config(disabledforeground= colors[board[x][y]], text = tile_no[board[x][y]])
-    buttons[x][y].config(relief=tkinter.SUNKEN, background = "#C0C0C0")
-    buttons[x][y]['state'] = 'disabled'
+    buttonConfig(buttons[x][y], text = tile_no[board[x][y]], disabledforeground = colors[board[x][y]], background = "#C0C0C0", relief = tkinter.SUNKEN, state = "disabled")
     #repeats the same for the 8 cells surrounding button[x][y] if current cell is a "pocket"
     #   N.W.      N        N.E.  #
     #   W         0          E   #
@@ -303,14 +311,12 @@ def onRightClick(x,y):
         return
     #If button is a flag, "unflags" that cell
     if buttons[x][y]["text"] == flag:
-        buttons[x][y].config(text = " ")
-        buttons[x][y]["state"] = "normal"
+        buttonConfig(buttons[x][y], text = " ", state = "normal")
     #else, flags the cell if cell is unflagged
     elif buttons[x][y]["text"] == " " and buttons[x][y]["state"] == "normal":
         #buttons[x][y]["state"] = "disabled"
         for i in range(0, 2):
-            buttons[x][y]["state"] = "disabled"
-            buttons[x][y].config(text = flag, disabledforeground = "black")
+            buttonConfig(buttons[x][y], text = flag, disabledforeground = "black", state = "disabled")
         
         
 #function checkWin is called everytime a cell is clicked on to check if win conditions have been met
@@ -329,15 +335,14 @@ def checkWin():
         gameover = True
         for _x in range(0, rows):
             for _y in range(cols):
+                buttonConfig(buttons[x][y], state = "disabled")
                 if board[_x][_y] == -1:
-                 
                     if buttons[_x][_y]["text"] == flag:
-                        buttons[_x][_y].config(bg = 'lime green', disabledforeground = "black")
+                        buttonConfig(buttons[x][y], disabledforeground = "black", background = "lime green")
                     elif buttons[_x][_y]["text"] != flag:
-                        buttons[_x][_y].config(text = mine)
+                        buttonConfig(buttons[x][y], text = mine)
                 elif board[_x][_y] != -1 and buttons[_x][_y]["text"] == flag:
-                    buttons[_x][_y].config(bg = 'red', disabledforeground = "black")
-                buttons[x][y]['state'] = 'disabled'  
+                    buttonConfig(buttons[x][y], disabledforeground = "black", background = "red")
         restartLabel.set(restartWon)
         tkinter.messagebox.showinfo("Game Over", "You have won")
 
@@ -346,7 +351,10 @@ if os.path.exists("config.ini"):
     loadConfig()
 else:#saving config to file config.ini if one doesn't already exist
     saveConfig()
-
+if sys.platform == 'darwin':
+    RightClick = "<Button-2>"
+elif sys.platform in ['win32', 'win64']:
+    RightClick = "<Button-3>"
 #main game area that sets up th game and then loops the window to reflect any changes
 createMenu()
 prepareWindow()
