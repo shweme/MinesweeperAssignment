@@ -1,31 +1,34 @@
-#import statements
+###############################
+###    Import Statements    ###
+###############################
 import tkinter, configparser, tkinter.messagebox, tkinter.simpledialog 
+from tkinter import font as tkfont
 import random, os, threading
 from time import sleep
 import sys
+#was going to be used for cell graphics and hex mines, but not enough time to implement
 #from PIL import Image, ImageTk
 
+
+
+###############################
+###     Window Creation     ###
+###############################
 #creating game window and setting title and icon
 window = tkinter.Tk()
 window.title("Minesweeper")
 window.iconbitmap("Flag.ico")
 window.resizable(0,0)
+mine_font = tkfont.nametofont("TkDefaultFont")
+mine_font.configure(size = 12, weight=(tkfont.BOLD))
 
+
+
+###############################
+###     Game Variables      ###
+###############################
 #prepare default values
 gameover = False
-
-#Restart label values
-restartDefault = "༼◔‿◔༽" #displayed when game first starts
-restartLost = "༼◕︿◕༽"    #displayed when player loses
-restartWon = "ヽ༼◔｡◔༽ﾉ"   #displayed when player wins game
-restartLabel = tkinter.StringVar()
-restartLabel.set(restartDefault)
-
-#Timer values
-count = 0
-time = tkinter.StringVar()
-time.set(count)
-firstClick = True
 
 #Declaring game board values and initialising to default "beginner" level
 rows = 10
@@ -45,10 +48,32 @@ colors = ['#FFFFFF', '#0000FF', '#008200', '#FF0000', '#000084', '#840000', '#00
 #image = Image.open("MinesweeperAssignment-master/images/tile_flag.png")
 mine = "☀"
 flag = "⚑"
-
 tile_no = [" ", "❶", "❷", "❸", "❹", "❺", "❻", "❼", "❽"]
 
+#Flag label values
+flagNums = mines
+flagLabel = tkinter.StringVar()
+flagLabel.set(str(flagNums))
 
+#Restart label values
+restartDefault = "༼◔‿◔༽" #displayed when game first starts
+restartLost = "༼◕︿◕༽"    #displayed when player loses
+restartWon = "ヽ༼◔｡◔༽ﾉ"   #displayed when player wins game
+restartLabel = tkinter.StringVar()
+restartLabel.set(restartDefault)
+
+#Timer values
+count = 0
+time = tkinter.StringVar()
+time.set(count)
+firstClick = True
+
+
+
+
+###############################
+###     Game Functions      ###
+###############################
 #function for timer label
 def timer():
     global count, firstClick, gameover
@@ -60,7 +85,8 @@ def timer():
 
 #threading variable
 timeVar = threading.Timer(1.0, timer)
-
+#while this shouldn't make a difference, 
+#on console Python was not accepting timeVar to be initialised before function timer() definition 
 
 #This function creates the menu bar which includes:
 def createMenu():
@@ -142,14 +168,24 @@ def loadConfig():
 #setup for board display
 def prepareWindow():
     global rows, cols, buttons, time
-    restartButton = tkinter.Button(window, textvariable=restartLabel, width = 2, font=("Times", 10, "bold"), command=restartGame).grid(row=0, column=0, columnspan=int(cols/2), sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
-    timerLabel= tkinter.Label(window, textvariable=time, font=("Times", 10, "bold"))
-    timerLabel.grid(row = 0, column = cols - (int(cols/2)), columnspan=int(cols/2), sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W)
+    x = tkinter.Label(window, textvariable=flagLabel, font=("Georgia", 10, "bold"))
+    x.grid(row=0, column=0, columnspan=3, sticky= tkinter.N+tkinter.E+tkinter.S+tkinter.W)
+    if sys.platform == 'darwin':
+        x.config(highlightbackground = "#C0C0C0")
+    else:
+        x.config(background = "#C0C0C0")
+    tkinter.Button(window, textvariable=restartLabel, font=("Georgia", 10, "bold"), command=restartGame).grid(row=0, column= 3, columnspan=cols-6, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
+    timerLabel= tkinter.Label(window, textvariable=time, font=("Georgia", 10, "bold"))
+    timerLabel.grid(row = 0, column = cols-3, columnspan=3, sticky = tkinter.N+tkinter.E+tkinter.S+tkinter.W)
+    if sys.platform == 'darwin':
+        timerLabel.config(highlightbackground = "#C0C0C0")
+    else:
+        timerLabel.config(background = "#C0C0C0")
     buttons = []
     for x in range(0, rows):
         buttons.append([])
         for y in range(0, cols):
-            b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Times", 10, "bold"), anchor = "center", command=lambda x=x,y=y: clickOn(x,y))
+            b = tkinter.Button(window, text=" ", width = 2, height = 1, font=("Georgia", 10, "bold"), anchor = "center", command=lambda x=x,y=y: clickOn(x,y))
             b.bind(RightClick, lambda e, x=x, y=y:onRightClick(x, y))
             b.grid(row=x+1, column=y, sticky=tkinter.N+tkinter.W+tkinter.S+tkinter.E)
             buttons[x].append(b)
@@ -208,7 +244,7 @@ def buttonConfig(button, **kwargs):
 
 #when the restart button is clicked, resets vital game values
 def restartGame():
-    global gameover, firstClick, count, timeVar, time
+    global gameover, firstClick, count, timeVar, time, flagNums, flagLabel, mines
     timeVar.cancel()
     gameover = False
     firstClick = True
@@ -222,6 +258,8 @@ def restartGame():
         if type(x) != tkinter.Menu:
             x.destroy()
     timeVar = threading.Timer(1.0, timer)
+    flagNums = mines
+    flagLabel.set(flagNums)
     prepareWindow()
 
 
@@ -305,19 +343,27 @@ def autoClickOn(x,y):
 
 #function that toggles between displaying a flag and "unflagging" when a cell is right clicked 
 def onRightClick(x,y):
-    global buttons, flag
+    global buttons, flag, flagNums
     if gameover:
         return
     #If button is a flag, "unflags" that cell
     if buttons[x][y]["text"] == flag:
+        updateFlags(1)
         buttonConfig(buttons[x][y], text = " ", state = "normal")
     #else, flags the cell if cell is unflagged
     elif buttons[x][y]["text"] == " " and buttons[x][y]["state"] == "normal":
-        #buttons[x][y]["state"] = "disabled"
+        updateFlags(-1)
         for i in range(0, 2):
             buttonConfig(buttons[x][y], text = flag, disabledforeground = "black", state = "disabled")
-        
-        
+
+
+#function to update Flag label
+def updateFlags(flagCount):
+    global flagNums
+    flagNums += flagCount
+    flagLabel.set(flagNums)
+
+
 #function checkWin is called everytime a cell is clicked on to check if win conditions have been met
 def checkWin():
     global buttons, board, rows, cols, gameover, firstClick, restartWon
