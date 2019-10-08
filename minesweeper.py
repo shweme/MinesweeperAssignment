@@ -28,6 +28,7 @@ mine_font.configure(size = 12, weight=(tkfont.BOLD))
 ###     Game Variables      ###
 ###############################
 #prepare default values
+
 gameover = False
 
 #Declaring game board values and initialising to default "beginner" level
@@ -390,6 +391,13 @@ def checkWin():
                 buttonConfig(buttons[_x][_y], state = "disabled")        
         restartLabel.set(restartWon)
         tkinter.messagebox.showinfo("Game Over", "You have won")
+
+
+
+
+##############################
+###          Main          ###
+##############################
 
 #loading configuration file for game 
 if os.path.exists("config.ini"):
